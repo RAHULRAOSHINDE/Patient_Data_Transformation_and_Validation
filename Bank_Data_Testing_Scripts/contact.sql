@@ -1,10 +1,12 @@
 
 #no of rows in contact table =13572
 #no of rows in temp table = 4258
-# hive -e "select * from contact_view where contact = 'unknown' > ~/unknown_contact.txt
+#no of rows in unknown contact =1329
 
 
-#Create a table which consists data for contact but without header row
+
+#Create a table which consists data for contact without header row
+
 CREATE EXTERNAL TABLE IF NOT EXISTS contact_source (
 custId int,
 age int,
@@ -64,7 +66,38 @@ previous_connects
 FROM contact_source;
 ;
 
-#
+#Filtering the data with “unknown contact” to a separate file  be sent to the team responsible for maintaining contact information
+
+hive -e "select * from contact_source where contact = "unknown" > ~/unknown_contact.txt
+
+#Filtering the data with "known_contact" to a separate file for further processing,querying,analysis
+
+hive -e "select * from contact_source where contact != "unknown" > ~/known_contact.txt         
+
+#contact_data
+
+CREATE EXTERNAL TABLE IF NOT EXISTS contact_data (
+custId int,
+age int,
+job string,
+martial string,
+education string,
+default string,
+balance int,
+contact string,
+day int,
+month string,
+duration int,
+campaign int,
+pdays int,
+previous_connects int
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+;
+
+
 
 
 
