@@ -1,10 +1,4 @@
 
-#no of rows in contact table =13572
-#no of rows in temp table = 4258
-#no of rows in unknown contact =1329
-
-
-
 #Create a table which consists data for contact without header row
 
 CREATE EXTERNAL TABLE IF NOT EXISTS contact_source (
@@ -37,7 +31,8 @@ LOAD DATA LOCAL INPATH '/root/Desktop/save_folder/Bank_Data_Testing_Scripts/cont
 #Where contact is not specified, replace it with unknown
 #Replace the month with month number
 
-INSERT OVERWRITE TABLE contact_source 
+CREATE VIEW cleansed_contact_data AS
+SELECT * FROM(
 SELECT DISTINCT custid,age,job,martial,education,default,balance,
 CASE 
   WHEN contact NOT IN ('unknown','telephone','cellular')
@@ -62,9 +57,12 @@ END AS month,
 duration,
 campaign,
 pdays,
-previous_connects
-FROM contact_source;
-;
+previous_connects,
+ROW_NUMBER() OVER (PARTITION BY custid ORDER BY day DESC,month DESC) as row_num
+FROM contact_source
+) contact_data
+WHERE row_num =1;
+
 
 #Filtering the data with “unknown contact” to a separate file  be sent to the team responsible for maintaining contact information
 
@@ -73,31 +71,6 @@ hive -e "select * from contact_source where contact = "unknown" > ~/unknown_cont
 #Filtering the data with "known_contact" to a separate file for further processing,querying,analysis
 
 hive -e "select * from contact_source where contact != "unknown" > ~/known_contact.txt         
-
-#contact_data
-
-CREATE EXTERNAL TABLE IF NOT EXISTS contact_data (
-custId int,
-age int,
-job string,
-martial string,
-education string,
-default string,
-balance int,
-contact string,
-day int,
-month string,
-duration int,
-campaign int,
-pdays int,
-previous_connects int
-)
-ROW FORMAT DELIMITED 
-FIELDS TERMINATED BY ','
-LINES TERMINATED BY '\n'
-;
-
-
 
 
 
