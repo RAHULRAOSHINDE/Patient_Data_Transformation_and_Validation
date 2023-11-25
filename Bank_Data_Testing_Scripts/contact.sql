@@ -27,11 +27,12 @@ TBLPROPERTIES("skip.header.line.count"="1")
 
 LOAD DATA LOCAL INPATH '/root/Desktop/save_folder/Bank_Data_Testing_Scripts/contact.csv' INTO TABLE contact_source;
 
+
 #Remove duplicate information
 #Where contact is not specified, replace it with unknown
 #Replace the month with month number
 
-CREATE VIEW cleansed_contact_data AS
+CREATE VIEW contact_data AS
 SELECT * FROM(
 SELECT DISTINCT custid,age,job,martial,education,default,balance,
 CASE 
@@ -60,21 +61,57 @@ pdays,
 previous_connects,
 ROW_NUMBER() OVER (PARTITION BY custid ORDER BY day DESC,month DESC) as row_num
 FROM contact_source
-) contact_data
+) latest_contact
 WHERE row_num =1;
-
 
 #Filtering the data with “unknown contact” to a separate file  be sent to the team responsible for maintaining contact information
 
-hive -e "select * from contact_source where contact = "unknown" > ~/unknown_contact.txt
+hive -e "select * from contact_source where contact = "unknown" > ~/unknown_contact.csv
 
-#Filtering the data with "known_contact" to a separate file for further processing,querying,analysis
+#latest contact information 
 
-hive -e "select * from contact_source where contact != "unknown" > ~/known_contact.txt         
+hive -e "select * from cleansed_contact_data" > ~/cleansed_contact_data.csv        
 
+#Create a table which consists data for cleansed contact data
 
+CREATE EXTERNAL TABLE IF NOT EXISTS cleansed_contact_data (
+custId int,
+age int,
+job string,
+martial string,
+education string,
+default string,
+balance int,
+contact string,
+day int,
+month string,
+duration int,
+campaign int,
+pdays int,
+previous_connects int
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+TBLPROPERTIES("creator"="rahul")
+;
 
+#Load data into cleansed_contact_data table
 
+LOAD DATA LOCAL INPATH '/root/cleansed_contact_data.csv' INTO TABLE cleansed_contact_data;
+
+#Create a table which consists data for loan data
+
+CREATE EXTERNAL TABLE IF NOT EXISTS loan_data (
+custid int,
+house_loan string,
+personal_loan string
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+TBLPROPERTIES("skip.header.line.count"="1")
+;
 
 
 
