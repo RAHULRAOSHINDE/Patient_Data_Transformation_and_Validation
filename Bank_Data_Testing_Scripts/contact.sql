@@ -66,12 +66,12 @@ WHERE row_num =1;
 
 #Filtering the data with “unknown contact” to a separate file  be sent to the team responsible for maintaining contact information
 
-hive -e "select * from contact_source where contact = "unknown" > ~/unknown_contact.csv
+hive -e "select * from contact_source where contact = 'unknown'" > ~/unknown_contact.csv
 
 #latest contact information 
 
-hive -e "select * from cleansed_contact_data" > ~/cleansed_contact_data.csv        
-
+hive -e "select * from contact_data where contact != 'unknown'" > ~/cleansed_contact_data.csv
+       
 #Create a table which consists data for cleansed contact data
 
 CREATE EXTERNAL TABLE IF NOT EXISTS cleansed_contact_data (
@@ -91,15 +91,17 @@ pdays int,
 previous_connects int
 )
 ROW FORMAT DELIMITED 
-FIELDS TERMINATED BY ','
+FIELDS TERMINATED BY '\t'
 LINES TERMINATED BY '\n'
-TBLPROPERTIES("creator"="rahul")
+STORED AS TEXTFILE
+LOCATION '/user/cleansed_data'
 ;
 
 #Load data into cleansed_contact_data table
 
 LOAD DATA LOCAL INPATH '/root/cleansed_contact_data.csv' INTO TABLE cleansed_contact_data;
 
+ 
 #Create a table which consists data for loan data
 
 CREATE EXTERNAL TABLE IF NOT EXISTS loan_data (
@@ -113,6 +115,17 @@ LINES TERMINATED BY '\n'
 TBLPROPERTIES("skip.header.line.count"="1")
 ;
 
+#Load data into loan_data table
+
+LOAD DATA LOCAL INPATH '/root/Desktop/user_repo/To_Participant/AdditionalSuppliedFiles/loan.csv' INTO TABLE loan_data;
+
+#Analyzing data 
+
+#criteria : If no record for the customer is found in loan.csv, assume that the customer has no loans
+
+CREATE VIEW campaign_data AS 
+select * from cleansed_contact_data cl JOIN loan_data ld ON cl.custid=ld.custid WHERE custid is NULL; 
+ 
 
 
 
