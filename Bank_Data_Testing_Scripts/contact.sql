@@ -122,11 +122,41 @@ LOAD DATA LOCAL INPATH '/root/Desktop/user_repo/To_Participant/AdditionalSupplie
 #Analyzing data 
 
 #criteria : If no record for the customer is found in loan.csv, assume that the customer has no loans
+#and extracting the results as a text file and renaming it as campaign_data.txt
 
-CREATE VIEW campaign_data AS 
-select * from cleansed_contact_data cl JOIN loan_data ld ON cl.custid=ld.custid WHERE custid is NULL; 
- 
+INSERT OVERWRITE LOCAL DIRECTORY '/root/Desktop/save_folder/Bank_Data_Testing_Scripts/campaign'
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ';'
+LINES TERMINATED BY '\n'
+SELECT cl.custid AS cl_custid,cl.age,cl.job,cl.martial,cl.education,cl.default,cl.balance,cl.contact,cl.day,cl.month,cl.duration,cl.campaign,cl.pdays,cl.previous_connects
+FROM cleansed_contact_data cl
+LEFT JOIN loan_data ld
+ON cl.custid = ld.custid
+WHERE ld.custid is NULL;
 
+mv /root/Desktop/save_folder/Bank_Data_Testing_Scripts/campaign/000000_0 /root/Desktop/save_folder/Bank_Data_Testing_Scripts/campaign/campaign_data.txt
+
+#Validating data
+
+# To check that no of record in contact.csv is equal to sum of records in “Unknown Contact” file in Unix and “Known contact” in Hive”
+
+#converting the endings to unix format
+
+# no of records in contact.csv-->4524
+
+wc -l unknown_contact.csv #to check no of record in unknown_contact.csv
+
+#no of records in unknown_contact.csv  --> 1327
+
+SELECT COUNT(*) FROM cleansed_contact_data;
+
+#no of known_contacts uploaded in hive --> 1919
+
+#no of records in loan_data in hive -1687
+
+SELECT COUNT(*) FROM loan_data ;
+
+#no of records in loan_data in unix --> 1688
 
 
 
