@@ -88,7 +88,8 @@ month string,
 duration int,
 campaign int,
 pdays int,
-previous_connects int
+previous_connects int,
+
 )
 ROW FORMAT DELIMITED 
 FIELDS TERMINATED BY '\t'
@@ -140,8 +141,6 @@ mv /root/Desktop/save_folder/Bank_Data_Testing_Scripts/campaign/000000_0 /root/D
 
 # To check that no of record in contact.csv is equal to sum of records in “Unknown Contact” file in Unix and “Known contact” in Hive”
 
-#converting the endings to unix format
-
 # no of records in contact.csv-->4524
 
 wc -l unknown_contact.csv #to check no of record in unknown_contact.csv
@@ -157,6 +156,43 @@ SELECT COUNT(*) FROM cleansed_contact_data;
 SELECT COUNT(*) FROM loan_data ;
 
 #no of records in loan_data in unix --> 1688
+
+#Performing data quality check txt file
+
+#The custids are unique
+
+702- custids
+
+#list of customers to be contacted based on busines criteria
+
+
+#creating a table which consists of customers to be contacted
+
+CREATE EXTERNAL TABLE IF NOT EXISTS customers_to_be_contacted(
+custid int,
+age int,
+job string,
+martial string,
+education string,
+default string,
+balance int,
+contact string,
+day int,
+month string,
+duration int,
+campaign int,
+pdays int,
+previous_connects int
+)
+ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+;
+
+select * from cleansed_contact_data  where age > 18 AND job NOT IN ('unknown','unemployed','student') AND default = 'no'
+
+
+
 
 
 
