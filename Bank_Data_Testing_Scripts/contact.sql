@@ -88,8 +88,7 @@ month string,
 duration int,
 campaign int,
 pdays int,
-previous_connects int,
-
+previous_connects int
 )
 ROW FORMAT DELIMITED 
 FIELDS TERMINATED BY '\t'
@@ -143,9 +142,9 @@ mv /root/Desktop/save_folder/Bank_Data_Testing_Scripts/campaign/000000_0 /root/D
 
 # no of records in contact.csv-->4524
 
-wc -l unknown_contact.csv #to check no of record in unknown_contact.csv
+wc -l unknown_contact.txt #to check no of record in unknown_contact.csv
 
-#no of records in unknown_contact.csv  --> 1327
+#no of records in unknown_contact.csv  --> 1329 
 
 SELECT COUNT(*) FROM cleansed_contact_data;
 
@@ -189,11 +188,20 @@ FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 ;
 
-select * from cleansed_contact_data  where age > 18 AND job NOT IN ('unknown','unemployed','student') AND default = 'no'
-
-
-
-
+#select * from cleansed_contact_data cl
+INNER JOIN loan_data ld
+ON cl.custid =ld.custid
+#age should be more than 18 years
+where age > 18 
+#should not be "unknown", "unemployed", "student"
+AND job NOT IN ('unknown','unemployed','student')
+# does not have credit in default 
+AND default = 'no'
+# balance needs to corelated with personal loan
+AND ((ld.personal_loan = "no" AND cl.balance > 1000) OR (ld.house_loan ="no"))
+#contact communication type should be known
+AND cl.contact IN ('cellular','telephone')
+#The customer was not previously contacted (-1) or was contacted 60 days prior
 
 
 
