@@ -1,0 +1,6 @@
+pid,int
+pname,string
+addr,string
+history,string
+dob,date
+allergies,string
